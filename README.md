@@ -41,13 +41,29 @@ import io.github.robsonkades.CnpjNumeric;
 
 public class Main {
     public static void main(String[] args) {
-        Cnpj cnpj = CnpjNumeric.create("12345678000195");
-        System.out.println("Gerado: " + cnpj.getValue());
+        try {
+            // Criar um CNPJ numérico válido
+            Cnpj numericCnpj = CnpjNumeric.create("12345678000195");
+            System.out.println("CNPJ Numérico: " + numericCnpj.getValue());
+            System.out.println("CNPJ Formatado: " + numericCnpj.format());
+            System.out.println("Raiz do CNPJ: " + numericCnpj.getRoot());
+            System.out.println("Representação: " + numericCnpj);
 
-        Cnpj alpha = CnpjAlphanumeric.create("12.ABC.345/01DE-35");
+            // Criar um CNPJ alfanumérico (apenas para demonstração, não padrão no Brasil)
+            Cnpj alphaCnpj = CnpjAlphanumeric.create("12ABC34501DE35");
+            System.out.println("\nCNPJ Alfanumérico: " + alphaCnpj.getValue());
+            System.out.println("CNPJ Alfanumérico Formatado: " + alphaCnpj.format());
 
-        String formatado = alpha.format();
-        System.out.println("Formatado: " + formatado);
+            // Gerar um CNPJ numérico aleatório
+            Cnpj randomCnpj = CnpjNumeric.random();
+            System.out.println("\nCNPJ Aleatório: " + randomCnpj.getValue());
+            System.out.println("CNPJ Aleatório Formatado: " + randomCnpj.format());
+
+            // Tentar criar um CNPJ inválido (deve lançar exceção)
+            Cnpj invalidCnpj = CnpjNumeric.create("12345678000100");
+        } catch (IllegalArgumentException e) {
+            System.out.println("\nErro: CNPJ inválido - " + e.getMessage());
+        }
     }
 }
 ```
