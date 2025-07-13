@@ -1,5 +1,7 @@
 package io.github.robsonkades;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * Classe final que representa um CNPJ (Cadastro Nacional da Pessoa Jurídica) com suporte exclusivo a
  * dígitos numéricos (0-9). Estende a classe abstrata {@link Cnpj} e implementa métodos para validação
@@ -28,6 +30,20 @@ public final class CnpjNumeric extends Cnpj {
     }
 
     /**
+     * Construtor privado padrão da classe {@code CnpjNumeric}.
+     *
+     * <p>Este construtor é privado para impedir a criação direta de instâncias da classe
+     * {@code CnpjNumeric}. A criação de objetos deve ser feita exclusivamente por meio do método
+     * estático {@link #create(String)} ou {@link #random()}, que realizam a validação ou geração do
+     * CNPJ, respectivamente. Este construtor não inicializa o campo {@code value} da superclasse
+     * {@link Cnpj}, que deve ser definido por meio do construtor da superclasse
+     * {@link Cnpj#Cnpj(String)} chamado pelos métodos {@link #create(String)} ou
+     * {@link #random()}.</p>
+     */
+    private CnpjNumeric() {
+    }
+
+    /**
      * Cria uma instância de {@code CnpjNumeric} a partir de um valor de CNPJ.
      *
      * <p>O método valida o CNPJ fornecido utilizando o método {@link Cnpj#isValid()}. Se o CNPJ for
@@ -40,9 +56,37 @@ public final class CnpjNumeric extends Cnpj {
      */
     public static Cnpj create(final String value) {
         Cnpj cnpj = new CnpjNumeric(value);
-        if (cnpj.isValid()) {
+        if (!cnpj.isValid()) {
             throw new IllegalArgumentException(value);
         }
+        return cnpj;
+    }
+
+    /**
+     * Gera um CNPJ numérico aleatório válido.
+     *
+     * <p>Este método cria uma instância de {@code CnpjNumeric} com um valor de CNPJ gerado
+     * aleatoriamente, composto por 12 dígitos base (0-9) e 2 dígitos verificadores calculados usando
+     * {@link #calcCheckDigits(String)}. A geração utiliza {@link java.util.concurrent.ThreadLocalRandom}
+     * para selecionar dígitos aleatórios, garantindo que o CNPJ resultante seja válido conforme as regras
+     * brasileiras de validação de CNPJ.</p>
+     *
+     * <p>O valor gerado é atribuído à instância por meio do método {@code setValue}, que deve ser
+     * implementado na classe {@code CnpjNumeric} para permitir a modificação do campo
+     * {@code value} da superclasse {@link Cnpj}. O CNPJ retornado é garantido como válido pelo método
+     * {@link Cnpj#isValid()}.</p>
+     *
+     * @return uma instância de {@code CnpjNumeric} contendo um CNPJ numérico aleatório válido
+     */
+    public static Cnpj random() {
+        Cnpj cnpj = new CnpjNumeric();
+        StringBuilder base = new StringBuilder(12);
+        for (int i = 0; i < 12; i++) {
+            base.append(ThreadLocalRandom.current().nextInt(10));
+        }
+        String baseStr = base.toString();
+        String checkDigits = cnpj.calcCheckDigits(baseStr);
+        cnpj.setValue(baseStr + checkDigits);
         return cnpj;
     }
 
@@ -58,7 +102,7 @@ public final class CnpjNumeric extends Cnpj {
      * {@link Cnpj#strip(String)}, o método retorna o valor original sem formatação.</p>
      *
      * @return uma {@code String} formatada no padrão "AA.AAA.AAA/AAAA-DD"; retorna o valor original
-     *         se o CNPJ não puder ser formatado
+     * se o CNPJ não puder ser formatado
      */
     @Override
     public String format() {

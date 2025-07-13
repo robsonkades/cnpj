@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)  
 [![Build Status](https://github.com/robsonkades/cnpj/actions/workflows/maven.yml/badge.svg)](https://github.com/robsonkades/cnpj/actions)
 
-**CNPJ** é uma biblioteca Java de alto desempenho para **formatação** e **validação** de CNPJs no formato tradicional (numérico) e no novo formato **alfanumérico** definido pela [Nota Técnica Conjunta 2025.001](https://www.gov.br/receitafederal/).
+**CNPJ** é uma biblioteca Java de alto desempenho para **Geração**, **formatação** e **validação** de CNPJs no formato tradicional (numérico) e no novo formato **alfanumérico** definido pela [Nota Técnica Conjunta 2025.001](https://www.gov.br/receitafederal/).
 
 Ideal para sistemas fiscais, contábeis, ERPs e integrações com SEFAZ.
 
@@ -23,6 +23,7 @@ Ideal para sistemas fiscais, contábeis, ERPs e integrações com SEFAZ.
 
 ## ✅ Funcionalidades
 
+- Geração de CNPJ **numérico** e **alfanumérico (base 36)**
 - Validação com cálculo de dígitos verificadores via **Módulo 11**
 - Compatível com o novo formato da NT 2025.001
 - Formatação e desformatação (strip)

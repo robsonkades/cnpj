@@ -2,6 +2,7 @@ package io.github.robsonkades;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -41,4 +42,15 @@ class CnpjAlphanumericTest {
         assertThat(Cnpj.strip(null)).isEqualTo("");
         assertThat(Cnpj.strip("!@#$%")).isEqualTo("");
     }
+
+    @Test
+    @DisplayName("Deve gerar um CNPJ alfanumérico aleatório válido")
+    void deveGerarCnpjAleatorioValido() {
+        Cnpj cnpj = CnpjAlphanumeric.random();
+        assertThat(cnpj).isNotNull();
+        assertThat(cnpj.getValue()).hasSize(14);
+        assertThat(cnpj.isValid()).isTrue();
+        assertThat(cnpj.getValue()).matches("[0-9A-Z]{14}");
+    }
+
 }
