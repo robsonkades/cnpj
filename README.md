@@ -38,8 +38,6 @@ Ideal para sistemas fiscais, contábeis, ERPs e integrações com SEFAZ.
 import io.github.robsonkades.Cnpj;
 import io.github.robsonkades.CnpjAlphanumeric;
 import io.github.robsonkades.CnpjNumeric;
-import io.github.robsonkades.cnpj.Cnpj;
-import io.github.robsonkades.cnpj.Cnpj.Type;
 
 public class Main {
     public static void main(String[] args) {
@@ -87,7 +85,7 @@ implementation("io.github.robsonkades:cnpj:1.0.0")
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
+This project is licensed under the [Apache 2.0 license.](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 ## Contributing
 
