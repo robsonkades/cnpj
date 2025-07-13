@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)  
 [![Build Status](https://github.com/robsonkades/cnpj/actions/workflows/maven.yml/badge.svg)](https://github.com/robsonkades/cnpj/actions)
 
-**CNPJ** é uma biblioteca Java de alto desempenho para **geração**, **formatação**, **validação** e **detecção automática** de CNPJs no formato tradicional (numérico) e no novo formato **alfanumérico** definido pela [Nota Técnica Conjunta 2025.001](https://www.gov.br/receitafederal/).
+**CNPJ** é uma biblioteca Java de alto desempenho para **formatação** e **validação** de CNPJs no formato tradicional (numérico) e no novo formato **alfanumérico** definido pela [Nota Técnica Conjunta 2025.001](https://www.gov.br/receitafederal/).
 
 Ideal para sistemas fiscais, contábeis, ERPs e integrações com SEFAZ.
 
@@ -23,10 +23,8 @@ Ideal para sistemas fiscais, contábeis, ERPs e integrações com SEFAZ.
 
 ## ✅ Funcionalidades
 
-- Geração de CNPJ **numérico** e **alfanumérico (base 36)**
 - Validação com cálculo de dígitos verificadores via **Módulo 11**
 - Compatível com o novo formato da NT 2025.001
-- Detecção automática do tipo (NUMERIC ou ALPHANUMERIC)
 - Formatação e desformatação (strip)
 - Sem dependências externas
 - Compatível com **Java 8+**
@@ -36,18 +34,20 @@ Ideal para sistemas fiscais, contábeis, ERPs e integrações com SEFAZ.
 ## 🚀 Exemplo Rápido
 
 ```java
+import io.github.robsonkades.Cnpj;
+import io.github.robsonkades.CnpjAlphanumeric;
+import io.github.robsonkades.CnpjNumeric;
 import io.github.robsonkades.cnpj.Cnpj;
 import io.github.robsonkades.cnpj.Cnpj.Type;
 
 public class Main {
     public static void main(String[] args) {
-        String cnpj = Cnpj.generate(Type.ALPHANUMERIC); // ou Type.NUMERIC
-        System.out.println("Gerado: " + cnpj);
+        Cnpj cnpj = CnpjNumeric.create("12345678000195");
+        System.out.println("Gerado: " + cnpj.getValue());
 
-        boolean valido = Cnpj.isValid(cnpj);
-        System.out.println("É válido? " + valido);
+        Cnpj alpha = CnpjAlphanumeric.create("12.ABC.345/01DE-35");
 
-        String formatado = Cnpj.format(cnpj);
+        String formatado = alpha.format();
         System.out.println("Formatado: " + formatado);
     }
 }
@@ -80,12 +80,8 @@ Esta biblioteca já suporta:
 
 ### Gradle (Kotlin DSL)
 
-```xml
-<dependency>
-  <groupId>io.github.robsonkades</groupId>
-  <artifactId>cnpj</artifactId>
-  <version>1.0.0</version>
-</dependency>
+```gradle
+implementation("io.github.robsonkades:cnpj:1.0.0")
 ```
 
 ## License

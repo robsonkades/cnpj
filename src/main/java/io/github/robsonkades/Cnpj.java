@@ -1,139 +1,67 @@
 package io.github.robsonkades;
 
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
-
 /**
- * Utilitário para geração, formatação e validação de números de
- * Cadastro Nacional da Pessoa Jurídica (CNPJ), suportando os formatos
- * numérico tradicional e o novo alfanumérico (base-36) conforme a
- * Nota Técnica Conjunta 2025.001 – publicada em 08/05/2025.
+ * Classe abstrata que representa um CNPJ (Cadastro Nacional da Pessoa Jurídica) no Brasil.
+ * Fornece funcionalidades para validação, formatação e manipulação de números de CNPJ.
+ * A classe é abstrata e deve ser estendida para implementar métodos específicos de cálculo de dígitos
+ * verificadores e formatação.
  *
- * <p>Esta classe é final e todos os métodos são estáticos, servindo
- * como biblioteca open‑source para uso em projetos Java.</p>
+ * <p>Os CNPJs são armazenados como uma {@code String} e podem ser validados de acordo com as regras
+ * oficiais do governo brasileiro, utilizando os pesos definidos nos arrays {@link #WEIGHTS_1} e
+ * {@link #WEIGHTS_2} para cálculo dos dígitos verificadores.</p>
  *
- * <p>Exemplo de uso:</p>
- * <pre>{@code
- * // Geração de CNPJ numérico
- * String cnpjNum = Cnpj.generate(Cnpj.Type.NUMERIC);
- *
- * // Geração de CNPJ alfanumérico
- * String cnpjAlpha = Cnpj.generate(Cnpj.Type.ALPHANUMERIC);
- *
- * // Validação automática
- * boolean validNum = Cnpj.isValid(cnpjNum);
- * boolean validAlpha = Cnpj.isValid(cnpjAlpha);
- *
- * // Formatação
- * String formatted = Cnpj.format(cnpjNum);
- *
- * // Remoção de máscara
- * String raw = Cnpj.strip("12.345.678/0001-95");
- * }</pre>
- *
- * @since 2025-07-10
+ * @author Robson Kades
  */
-public final class Cnpj {
+public abstract class Cnpj {
 
     /**
-     * Tipos de CNPJ suportados:
-     * <ul>
-     *   <li>{@link Type#NUMERIC NUMERIC}: formato tradicional (apenas dígitos)</li>
-     *   <li>{@link Type#ALPHANUMERIC ALPHANUMERIC}: novo formato base‑36 (0–9, A–Z)</li>
-     * </ul>
+     * O valor do CNPJ, armazenado como uma {@code String}.
+     * Pode conter caracteres alfanuméricos e formatação, mas é recomendado que seja limpo
+     * usando o método {@link #strip(String)} antes de validações.
      */
-    public enum Type {
-        /** CNPJ contendo apenas dígitos (0–9). */
-        NUMERIC,
-
-        /** CNPJ contendo dígitos e letras (0–9, A–Z). */
-        ALPHANUMERIC
-    }
-
-    private static final char[] BASE36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-    private static final int[] WEIGHTS_1 = {5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
-    private static final int[] WEIGHTS_2 = {6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
-
-    private Cnpj() {
-        // Construtor privado para evitar instanciação
-    }
+    protected final String value;
 
     /**
-     * Gera um CNPJ válido no formato especificado.
-     *
-     * @param type o tipo de CNPJ a ser gerado ({@link Type#NUMERIC} ou {@link Type#ALPHANUMERIC})
-     * @return uma {@code String} de 14 caracteres representando o CNPJ sem pontuação ou máscara
+     * Array de pesos para o cálculo do primeiro dígito verificador do CNPJ.
+     * Contém os valores: {5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2}.
      */
-    public static String generate(final Type type) {
-        StringBuilder base = new StringBuilder(12);
-        for (int i = 0; i < 12; i++) {
-            if (type == Type.NUMERIC) {
-                base.append(ThreadLocalRandom.current().nextInt(10));
-            } else {
-                int index = ThreadLocalRandom.current().nextInt(36);
-                base.append(BASE36[index]);
-            }
-        }
-
-        String baseStr = base.toString();
-        String checkDigits = calcCheckDigits(baseStr, type);
-        return baseStr + checkDigits;
-    }
+    protected static final int[] WEIGHTS_1 = {5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
 
     /**
-     * Verifica se o CNPJ informado é válido, detectando automaticamente
-     * o tipo (numérico ou alfanumérico).
-     *
-     * @param rawCnpj com ou sem formatação
-     * @return um {@code true} se o CNPJ for válido; {@code false} caso contrário
+     * Array de pesos para o cálculo do segundo dígito verificador do CNPJ.
+     * Contém os valores: {6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2}.
      */
-    public static boolean isValid(final String rawCnpj) {
-        String clean = strip(rawCnpj);
-        if (clean.length() != 14) return false;
-
-        Optional<Type> maybeType = detectType(clean);
-        if (maybeType.isEmpty()) return false;
-
-        Type type = maybeType.get();
-        String base = clean.substring(0, 12);
-        String expected = calcCheckDigits(base, type);
-        return clean.endsWith(expected);
-    }
+    protected static final int[] WEIGHTS_2 = {6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
 
     /**
-     * Detecta o tipo de CNPJ com base nos caracteres fornecidos.
+     * Construtor da classe {@code Cnpj}.
      *
-     * @param cnpj já sem formatação (14 caracteres alfanuméricos)
-     * @return um {@link Optional} contendo o {@link Type} detectado, ou vazio se inválido
+     * @param value o valor do CNPJ como uma {@code String}, que pode conter formatação
+     *              (ex.: "12.345.678/0001-90") ou apenas dígitos
      */
-    public static Optional<Type> detectType(final String cnpj) {
-        String clean = strip(cnpj);
-        if (clean.matches("\\d{14}")) return Optional.of(Type.NUMERIC);
-        if (clean.matches("[0-9A-Z]{14}")) return Optional.of(Type.ALPHANUMERIC);
-        return Optional.empty();
+    public Cnpj(final String value) {
+        this.value = value;
     }
 
     /**
-     * Formata um CNPJ de 14 caracteres, inserindo pontos, barra e hífen
-     * conforme padrão brasileiro.
+     * Obtém o valor do CNPJ armazenado.
      *
-     * @param cnpj de 14 caracteres sem formatação
-     * @return uma {@code String} formatada ("AA.AAA.AAA/AAAA-DD") ou a própria string se inválida
+     * @return o valor do CNPJ como uma {@code String}
      */
-    public static String format(final String cnpj) {
-        if (cnpj == null || cnpj.length() != 14) return cnpj;
-        Optional<Type> cnpjType = detectType(cnpj);
-        return cnpjType.map(type -> (type == Type.NUMERIC)
-                ? cnpj.replaceFirst("(\\d{2})(\\d{3})(\\d{3})(\\d{4})(\\d{2})", "$1.$2.$3/$4-$5")
-                : cnpj.replaceFirst("(.{2})(.{3})(.{3})(.{4})(.{2})", "$1.$2.$3/$4-$5")).orElse(cnpj);
-
+    public String getValue() {
+        return value;
     }
 
     /**
-     * Remove todos os caracteres que não sejam dígitos (0–9) ou letras maiúsculas (A–Z).
+     * Remove todos os caracteres que não sejam dígitos (0–9) ou letras maiúsculas (A–Z) de uma
+     * {@code String} fornecida.
      *
-     * @param raw potencialmente contendo máscara ou formatação
-     * @return uma {@code String} limpa com até 14 caracteres alfanuméricos
+     * <p>Este método é útil para limpar um CNPJ que pode conter formatação, como pontos, barras ou
+     * hífen, retornando apenas os caracteres alfanuméricos relevantes.</p>
+     *
+     * @param raw a {@code String} potencialmente contendo máscara ou formatação
+     * @return uma {@code String} limpa com até 14 caracteres alfanuméricos; retorna uma
+     *         {@code String} vazia se o parâmetro for {@code null}
      */
     public static String strip(final String raw) {
         if (raw == null) return "";
@@ -146,32 +74,60 @@ public final class Cnpj {
         return sb.toString();
     }
 
-    // Calcula os dois dígitos verificadores usando módulo 11 e pesos predefinidos.
-    private static String calcCheckDigits(final String base, final Type type) {
-        char d1 = calcDigit(base, type, WEIGHTS_1);
-        char d2 = calcDigit(base + d1, type, WEIGHTS_2);
+    /**
+     * Verifica se o CNPJ armazenado é válido conforme as regras brasileiras.
+     *
+     * <p>O método limpa o valor do CNPJ usando {@link #strip(String)} e verifica se possui
+     * exatamente 14 dígitos. Em seguida, calcula os dígitos verificadores esperados usando
+     * {@link #calcCheckDigits(String)} e compara com os dígitos fornecidos.</p>
+     *
+     * @return {@code true} se o CNPJ for válido; {@code false} caso contrário
+     */
+    protected boolean isValid() {
+        String clean = strip(this.getValue());
+        if (clean.length() != 14) return true;
+        String base = clean.substring(0, 12);
+        String expected = calcCheckDigits(base);
+        return !clean.endsWith(expected);
+    }
+
+    /**
+     * Calcula os dígitos verificadores de um CNPJ com base nos 12 primeiros dígitos.
+     *
+     * <p>Este método utiliza os pesos definidos em {@link #WEIGHTS_1} e {@link #WEIGHTS_2} para
+     * calcular os dois dígitos verificadores do CNPJ.</p>
+     *
+     * @param base a {@code String} contendo os 12 primeiros dígitos do CNPJ
+     * @return uma {@code String} com os dois dígitos verificadores calculados
+     */
+    protected String calcCheckDigits(final String base) {
+        char d1 = calcDigit(base, WEIGHTS_1);
+        char d2 = calcDigit(base + d1, WEIGHTS_2);
         return "" + d1 + d2;
     }
 
-    // Calcula um dígito verificador a partir da string de entrada e dos pesos.
-    private static char calcDigit(final String input, final Type type, final int[] weights) {
-        int sum = 0;
-        for (int i = 0; i < weights.length; i++) {
-            char c = input.charAt(i);
-            int value;
+    /**
+     * Calcula um único dígito verificador com base em uma sequência de entrada e um array de pesos.
+     *
+     * <p>Este método é abstrato e deve ser implementado por subclasses para realizar o cálculo
+     * específico do dígito verificador, utilizando os pesos fornecidos.</p>
+     *
+     * @param input   a {@code String} contendo a sequência de entrada para cálculo
+     * @param weights o array de pesos a ser utilizado no cálculo
+     * @return o caractere representando o dígito verificador calculado
+     */
+    abstract char calcDigit(final String input, final int[] weights);
 
-            if (type == Type.NUMERIC) {
-                value = Character.getNumericValue(c);
-            } else {
-                value = ((int) c) - 48;
-                if (value < 0 || value > 42) return '0'; // valor inválido
-            }
+    /**
+     * Formata o CNPJ armazenado no padrão brasileiro, inserindo pontos, barra e hífen.
+     *
+     * <p>O formato retornado segue o padrão "AA.AAA.AAA/AAAA-DD", onde "AA" são os dois primeiros
+     * dígitos, "AAA.AAA" são os próximos seis dígitos, "AAAA" são os quatro dígitos da filial e
+     * "DD" são os dígitos verificadores.</p>
+     *
+     * @return uma {@code String} formatada no padrão "AA.AAA.AAA/AAAA-DD"; retorna o valor original
+     *         se o CNPJ for inválido
+     */
+    public abstract String format();
 
-            sum += value * weights[i];
-        }
-
-        int mod = sum % 11;
-        int dv = 11 - mod;
-        return (dv >= 10) ? '0' : Character.forDigit(dv, 10);
-    }
 }
